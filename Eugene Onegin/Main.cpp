@@ -3,111 +3,188 @@
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <algorithm>
-#include <iostream>
-using namespace std;
 
-//КАК сортировать пропуская символы!!!!!
+#define MAXTEXTSZ 1000	//! max number of strings in the text
+#define MAXLINE 100 + 1	//! max lentgth of the string + '\0'									
 
+#define alphabetsz 32	//! size of the russian alphabet
 
+//! convert char to int
+#define uc(c) int(unsigned char((c)-'а'))
 
-
-
-
-// max number of strings in the text
-#define MAXTEXTSZ 1000
-// max lentgth of the string + '\0'
-#define MAXLINE 100 + 1										
-
-// to delete dynamic memory
+//! to delete dynamic memory
 int Delete_text(char** text,int textsz) {
 	for (int i = 0; i < textsz; i++)
 		free(text[i]);
 	delete[] text;
 	return 0;
 }
-void Sort_oneletter(char** lhs, char** rhs, int letter){
-// conditions for sorting algorithm
-#define bool_1 ptr2[0][letter]==ptr2[1][letter] && strlen(ptr2[0]) > strlen(ptr2[1])
-#define bool_2 ptr2[0][letter] > ptr2[1][letter]
-	
-	for (char** ptr1 = lhs + 1; ptr1 <= rhs; ptr1++) {
-		 char** ptr2 = ptr1 - 1;
-		
-		while (ptr2 >= lhs && (bool_1 || bool_2 )){
-				//swop(ptr2[0],ptr2[1])
-				char* tmp = ptr2[1];
-				ptr2[1] = ptr2[0];
-				ptr2[0] = tmp;
-				ptr2--;
-				//update bools
-				if (ptr2 >= lhs) {bool_1; bool_2;}
-		}	
-	}
+
+//! to initialize some massives
+void init(int*a, int n,int k) {
+	for (int i = 0; i < n; i++)
+		a[i] = k;
 }
-void AlphabetSort(char** lhs, char** rhs, int letter) {
+
+//! this function allows to get chars 
+//! from the string regardless of 
+//! punctuation marks.
+//! [in] n - the number of the symbol we 
+//! want to get
+//! [in] bool inv tell how to read: 
+//! from begining to end(false) or vice versa(true)
+char Getchar(char* str, int n, bool inv) {
+	int ch = -1;
+	int k = 0;
+	bool found = false;
+	if (!inv)
+		for (int i = 0; i < strlen(str); i++) {
+			k = int(unsigned char(str[i]));
+
+			//! is this an alpha?
+			if (k <= 255 && k >= 192) ch++;
+
+			if (ch == n) { found = true;	break; }
+		}
+	else
+		for (int i = strlen(str)-1; i >= 0; i--) {
+			k = int(unsigned char(str[i]));
+
+			//! is this an alpha?
+			if (k <= 255 && k >= 192) ch++;
+
+			if (ch == n) { found = true;	break; }
+		}
+
 	
-	if (lhs >= rhs) return;
-	
-	if (strlen(*lhs) < letter+1) { 
-		AlphabetSort(lhs + 1, rhs, letter);
+	if (!found) return '#';
+	//! if the symbol is uppercase it 
+	//! gives lowercase analog
+	return (k < 224) ? (k + 32) : k;
+}
+//! this function is called from EO_Sort() and
+//! it does radix sorting
+
+void radixSort(char** text, int *track_w, int index, int lvl, bool inv,char** &result) {
+	//! exit from recursion 
+	if (track_w[index] == -1) {
+		*result = text[index];
+		result++;
 		return;
 	}
-	
-	Sort_oneletter(lhs, rhs, letter);
-	
-	char **lhs2 = lhs, **rhs2 = lhs;
-	char cur = (*lhs)[letter];
-	
-	for (; rhs2 < rhs; rhs2++) {
-		if ((*rhs2)[letter] == cur) continue;
-		
-		AlphabetSort(lhs2, rhs2 - 1, letter + 1);
-		
-		cur = (*rhs2)[letter];
-		lhs2 = rhs2;
 
+	int* track_l = new int[alphabetsz];
+	init(track_l, alphabetsz, -1);
+	
+	//! fill track_l
+	while (index != -1) {
+		char c = Getchar(text[index], lvl,inv);
+		
+		//! if we can't get the char then
+		//! the char will be just russian 'a'
+		if (c=='#') c = 'а'; 
+
+		//! swop 3 variables in circle
+		int tmp = track_w[index];		
+		track_w[index] = track_l[uc(c)];
+		track_l[uc(c)] = index;
+		index = tmp;
 	}
-	if ((*rhs2)[letter] == cur)
-		 AlphabetSort(lhs2, rhs2, letter + 1);
-	else AlphabetSort(lhs2, rhs2-1, letter + 1);
+	//! go deeper
+	for (int i = 0; i < alphabetsz; i++)
+		if (track_l[i] != -1)
+			radixSort(text, track_w, track_l[i], lvl + 1,inv, result);
+
+	delete[] track_l;
 }
 
+//! this funcion (along with radixSort) is intended to 
+//! sort the set of strings
+//! the algorithm is msd radix sort
+//! [in] bool inv tell how to sort: 
+//! from begining to end(false) or vice versa(true)
+void EO_Sort(char** text, int * track_w, int txtsz,bool inv, char** result) {
+	
+	//! initialization of track_l
+	int* track_l = new int[alphabetsz];
+	init(track_l, alphabetsz, -1);
+	
+	//! initialization of track_w
+	for (int i = 0; i < txtsz; i++) {
+		for (int j = i - 1; j >= 0; j--)
+			if (Getchar(text[j],0,inv) == Getchar(text[i],0,inv)) {
+				track_w[i] = j;
+				break;
+			}
+		track_l[uc(Getchar(text[i],0,inv))] = i;
+	}
+	
+	for (int i = 0; i < alphabetsz; i++)
+		if (track_l[i] != -1)
+			radixSort(text, track_w, track_l[i], 1, inv, result);
+	
+	delete[] track_l;
+}
 
 int main() {
 	
 	FILE *input  = fopen("input.txt", "r");
-	FILE *output = fopen("output.txt", "w");
+	FILE *output1 = fopen("output.txt", "w");
+	FILE *output2 = fopen("output2.txt", "w");
 	setlocale(LC_ALL, "Rus");
 	
-	// buffer for the input
+	//! buffer for the input
 	char buff[MAXLINE];									   
 	
-	// the text is here
-	char **text = new char*[MAXTEXTSZ] {NULL};				
+	//! the text is here
+	char **text = new char*[MAXTEXTSZ]; 
+	//! initialize
+	for (int i = 0; i < MAXTEXTSZ; i++) text[i] = NULL;
 	int textsize = 0;
 
-	//reading the file and making the text
+	//! reading the file and making the text
 	for (int i = 0; fgets(buff, MAXLINE, input) != NULL; i++) { 
-		
-		//to delete '\n' in the end
+		//! to delete '\n' in the end
 		char *ptr = strchr(buff, '\n');
 		if (ptr == buff) { i--; continue; }
 		if (ptr != NULL) *ptr = '\0';
 
+		//! write in the text[][]
 		text[i] = _strdup(buff);
 		textsize++ ;
 	}
+	//! trakw("track word") is the massive to sort the text
+	int* trackw = new int[textsize];
+	init(trackw, textsize, -1);
+	
+	//! result contains sorted text
+	char**result = new char*[textsize]; 
+	for (int i = 0; i < textsize; i++) result[i] = NULL;
+	
+	
+	EO_Sort(text, trackw, textsize, false, result);
 
-	AlphabetSort(text, text+textsize - 1, 0);
+	//! to sort strings from the end
+	char**invresult = new char*[textsize];
+	for (int i = 0; i < textsize; i++) invresult[i] = NULL;
+
+	init(trackw, textsize, -1);
+
+	EO_Sort(text, trackw, textsize, true, invresult);
 	
 	
-	for (int i = 0; i < textsize; i++)
-		fprintf(output, "%s\n", text[i]);
+	for (int i = 0; i < textsize; i++) {
+		fprintf(output1, "%s\n", result[i]);
+		fprintf(output2, "%s\n", invresult[i]);
+	}
 	
+	delete[]trackw;
+	delete[]result;
+	delete[]invresult;
 	Delete_text(text,textsize);
-	fclose(input);
-	fclose(output);
 	
-	system("pause");
+	fclose(input);
+	fclose(output1);
+	fclose(output2);
+	return 0;
 }
