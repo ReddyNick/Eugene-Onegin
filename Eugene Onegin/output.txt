@@ -104,7 +104,6 @@
 Друзья Людмилы и Руслана!
 Духи в граненом хрустале;
 Душой исполненный полет?
-Beef-stеаks и страсбургский пирог
 Его бобровый воротник.
 Его ласкал супруг лукавый,
 Его пример другим наука;
@@ -196,7 +195,6 @@ Beef-stеаks и страсбургский пирог
 Как взор его был быстр и нежен,
 Как государство богатеет,
 Какие сети им готовил!
-Как dandy {2} лондонский одет -
 Как мы ни бились, отличить.
 Как на лугах ваш легкий след.
 Какое низкое коварство
@@ -207,9 +205,9 @@ Beef-stеаks и страсбургский пирог
 Как рано мог он лицемерить,
 Как рано мог уж он тревожить
 Как томно был он молчалив,
-Как Child-Harold, угрюмый, томный
 Как я желал тогда с волнами
 Как я завидовал волнам,
+Как dandy {2} лондонский одет -
 Кипящей младости моей
 К нему записочки несут.
 Когда болела голова;
@@ -226,13 +224,13 @@ Beef-stеаks и страсбургский пирог
 Коснуться до всего слегка,
 Коснуться милых ног устами!
 Которую воспел Назон,
-К Talon {4} помчался: он уверен,
 Красавицы не долго были
 Красноречивым сумасбродом {6}.
 Кругом и шум и теснота;
 Куда ж поскачет мой проказник?
 Куда стремглав в ямской карете
 К чему бесплодно спорить с веком?
+К Talon {4} помчался: он уверен,
 Латынь из моды вышла ныне:
 Легко мазурку танцевал
 Летают ножки милых дам;
@@ -252,7 +250,7 @@ Beef-stеаks и страсбургский пирог
 Мог изъясняться и писал;
 Мои богини! что вы? где вы?
 Моину вызвать (для того,
-"Мой дядя самых честных правил,
+   "Мой дядя самых честных правил,
 Молить и требовать признанья,
 Морозной пылью серебрится
 Музыка уж греметь устала;
@@ -368,7 +366,6 @@ Beef-stеаks и страсбургский пирог
 Преследовать любовь, и вдруг
 Пришла Евгению пора,
 Приятной лестью забавлять,
-Monsieur прогнали со двора.
 Проснется за полдень, и снова
 Проснулся утра шум приятный.
 Прошу мою заметить речь:
@@ -455,7 +452,6 @@ Monsieur прогнали со двора.
 Философа в осьмнадцать лет.
 Фобласа давний ученик,
 Французской кухни лучший цвет,
-Monsieur l'Abbe, француз убогой,
 Хоть и заглядывал я встарь
 Хранил он в памяти своей.
 Хранить молчанье в важном споре
@@ -488,3 +484,60 @@ Monsieur l'Abbe, француз убогой,
 Янтарь на трубках Цареграда,
 Я помню море пред грозою:
 Я это потому пишу,
+   Gently for pranks he would reprove
+   Have shone as one of fashion's leaders.
+   Having performed his service truly,
+   He hath acquired the world's esteem
+   He is a charming youth and wise.
+   He wrote and spoke, so all allowed,
+   I also wandered there of old,
+   If seriously he hath disease;
+   Inheritor of all his race.
+   In history he took no pleasure,
+   Instructed jestingly the boy,
+   In the French language perfectly,
+   In truth he had the happy trick
+   It may be ye were born, or there
+   Let me present ye to the man,
+   Lo! my Oneguine free as air,
+Monsieur прогнали со двора.
+   Monsieur clean out of doors they chase.
+   Morality taught scarce at all;
+   My uncle's goodness is extreme,
+   has been carried off by a kaldoon, or magician.]
+   [Note 1: Ruslan and Liudmila, the title of Pushkin's first
+   Of the Aeneid, but incorrect.
+   Of touching lightly every theme.
+   important work, written 1817-20. It is a tale relating the adventures
+   Oneguine, O my gentle readers,
+   Oneguine knew enough, the rogue
+   Oneguine was—so many deemed
+   Pedantic although scholar like,
+   Silent, oracular ye'd see him
+   The boy was wild but full of grace.
+   The dusty chronicles of earth
+   The giddy world at last shall see.
+   The hero is of my narration!
+   The path of hope and tender fear—
+   Three balls a year he gave ye duly,
+   Through clouds of dust at postal pace,
+   Thus mused a madcap young, who drove
+   Thus, praised be God! a reputation
+   To sigh and meditate alone:
+   Two verses he could recollect
+   of the knight-errant Ruslan in search of his fair lady Liudmila, who
+   [Unerring critics self-esteemed],
+   Was born beside the Neva, where
+   We all of us of education
+   What more's required? The world replies,
+   When will the devil take his own!"
+   When youth's rebellious hour drew near
+   Who without more prevarication
+   Within his memory there lay,
+   Without a chance to slip away.
+   Without constraint in conversation
+   Without the least constraint he bowed.
+   With us is easily attained.
+   With "vale" finish off a note;
+   Ye need dissimulation base
+   Yet still of anecdotes a treasure
