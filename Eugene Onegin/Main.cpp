@@ -6,21 +6,48 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <iostream>
+#include <utility>
 
-#define MAXTEXTSZ 1000	//! max number of strings in the text
-#define MAXLINE 100 + 1	//! max lentgth of the string + '\0'									
+							
+#define ALPHABETSZ 32+26	//! size of the russian + english alphabet
+#define MAXSTRSZ 200		//! maximum size of a string
+typedef std::pair<char*, char*> PointerC;
 
-#define alphabetsz 32+26	//! size of the russian alphabet
+//! arguments for sorting function
+struct Arguments {
+	char** text = NULL; 
+	int *trackw = NULL;
+	int**trackl = NULL;
+	int index = 0, lvl = 0;
+	bool inv = false;
+	PointerC *pointc = NULL;
+};
 
-//! convert char to int
-int uc(char c) {
-	if ((unsigned char((c)) > 223))
-		return int(unsigned char((c)-'à'));
-		return	int(unsigned char((c)-'a')) + 32;
+/*
+convert char to int
+à - ÿ(russian letters) --> 0 - 31
+a - z(english letters) --> 32 - 57
+*/
+int uc(char letter) {
+	//! 224 - ASCII for the russian 'a' 
+	//! 32 - the size of the russian alphabet
+	unsigned char c = letter;
+	
+	// if russian letter
+	if (int(c) > 191) {
+
+		//! if the symbol is uppercase it 
+		//! gives lowercase analog
+		c = (int(c) < 224) ? unsigned char(c + 32) : c;
+		return int(unsigned char(c - 'à'));
+	}
+	// if english
+		c =  (int(c) < 97) ? unsigned char (c + 32) : c;
+		return	int(unsigned char(c - 'a')) + 32;
 }
 
 //! to initialize some massives
-void init(int*a, int n,int k) {
+void init(int *a, int n,int k) {
 	for (int i = 0; i < n; i++)
 		a[i] = k;
 }
@@ -28,85 +55,125 @@ void init(int*a, int n,int k) {
 //! this function allows to get chars 
 //! from the string regardless of 
 //! punctuation marks.
-//! [in] n - the number of the symbol we 
-//! want to get
 //! [in] bool inv tell how to read: 
 //! from begining to end(false) or vice versa(true)
-char Getchar(char* str, int n, bool inv) {
-	//! letter - the number of the current letter
-	//! found  - the flag wich tells if the needed letter is found
-	//! c - to read symbols (unsigned char!)
-	int letter = -1;
-	bool found = false;
-	unsigned char c = ' ';
+int Getchar(int str, bool inv, PointerC *&pointc)
+{
+	// from begining to end
+	if (!inv) {
+		// if we have read all the letters
+		if (pointc[str].first == NULL)
+			return -1;
 
-	if (!inv)
-		for (int i = 0; i < strlen(str); i++){
-			c = str[i];
-
-			//! is this an alpha?
-			if (isalpha(c)) letter++; //k <= 255 && k >= 192
-
-			if (letter == n) { found = true;	break; }
+		char* tmp = (pointc[str].first);
+		// find next letter passing by punctuation marks
+		// until the end of the string
+		
+		int k = int(unsigned char(*tmp));
+		while (tmp != pointc[str].second && !isalpha(k)) {
+			tmp++;
+			k = int(unsigned char(*tmp));
 		}
-	else
-		for (int i = strlen(str)-1; i >= 0; i--) {
-			c = str[i];
-
-			//! is this an alpha?
-			if (isalpha(c)) letter++;
-
-			if (letter == n) { found = true;	break; }
+		if (tmp != pointc[str].second) {
+			// uc() translates char to int
+			pointc[str].first = tmp + 1;
+			return uc(*tmp);
 		}
+		//if read all letters
+		pointc[str].first = NULL;
+		if (isalpha(k)) {
+			return uc(*tmp);
+		}
+		return -1;
+	}
+	// from end to begining
+	else {
+		if (pointc[str].second == NULL)
+			return -1;
 
-	if (!found) return '#';
-	//! if the symbol is uppercase it 
-	//! gives lowercase analog
-	if (int(c)>191)
-		return (int(c) < 224) ? (char)(c + 32) : c;
-	else
-		return (int(c) < 97) ? (char)(c + 26) : c;
+		char* tmp = (pointc[str].second);
+		int k = int(unsigned char(*tmp));
+		while (tmp != pointc[str].first && !isalpha(k)) {
+			tmp--;
+			k = int(unsigned char(*tmp));
+		}
+		if (tmp != pointc[str].first) {
+			// uc() translates char to int
+			pointc[str].second = tmp - 1;
+			return uc(*tmp);
+		}
+		pointc[str].second = NULL;
+		if (isalpha(k)) {
+			return uc(*tmp);
+		}
+		return -1;
+	}
 }
 
-//! this function is called from EO_Sort() and
+//! intialization of pointc
+int Init_pointc(std::pair<char*, char*> *pointc, char**text)
+{
+	char** tmp = text;
+	int i = 0;
+	for (; tmp[i + 1] != NULL; i++) {
+		pointc[i].first = tmp[i];
+		char* end = tmp[i + 1] - 1;
+		while (!isalpha(int(unsigned char(*end)))) end--;
+		pointc[i].second = end;
+
+	}
+	pointc[i].first = tmp[i];
+	char*end = tmp[i];
+	while (*(end + 1) != '\0') end++;
+	pointc[i].second = end;
+	return 0;
+
+}
+
+//! this function is called from Sort() and
 //! it does radix sorting
-void radixSort(char** text, int *track_w, int index, int lvl, bool inv,char**&result) {
+void radixSort(Arguments &arg, char**&result) {
+	int index = arg.index;
+	int lvl = arg.lvl;
+
 	//! exit from recursion 
-	if (track_w[index] == -1) {
-		*result = text[index];
+	if (arg.trackw[index] == -1) {
+		*result = arg.text[index];
 		result++;
 		return;
 	}
-
-	int* track_l = new int[alphabetsz];
-	init(track_l, alphabetsz, -1);
+	// flag = true if trackl[lvl] is not changed 
 	bool flag = false;
-	//! fill track_l
+	
+	//! fill trackl[lvl]
 	while (index != -1) {
 	
-		char c;
-		if (strlen(text[index]) < lvl + 1) {
-			*result = text[index];
+		int c = Getchar(index, arg.inv,arg.pointc);
+		if (c == -1) {
+			*result = arg.text[index];
 			result++;
-			index = track_w[index];
+			index = arg.trackw[index];
 			continue;
 		}
-		else
-			c = Getchar(text[index], lvl,inv);
 		
-		int tmp = track_w[index];		
-		track_w[index] = track_l[uc(c)];
-		track_l[uc(c)] = index;
+		// swap 3 variables 
+		int tmp = arg.trackw[index];	
+		arg.trackw[index] = arg.trackl[lvl][c];
+		arg.trackl[lvl][c] = index;
 		index = tmp;
 		flag = true;
 	}
 	
 	//! go deeper
+	arg.lvl++;
 	if(flag)
-		for (int i = 0; i < alphabetsz; i++) {
-				radixSort(text, track_w, track_l[i], lvl + 1,inv, result);
-		}
-	delete[] track_l;
+		for (int i = 0; i < ALPHABETSZ; i++) 
+			if (arg.trackl[lvl][i] != -1) {
+				arg.index = arg.trackl[lvl][i];				
+				radixSort(arg, result);
+				arg.trackl[lvl][i] = -1;
+			}
+	arg.lvl--;
 }
 
 //! this funcion (along with radixSort) is intended to 
@@ -114,43 +181,65 @@ void radixSort(char** text, int *track_w, int index, int lvl, bool inv,char**&re
 //! the algorithm is msd radix sort
 //! [in] bool backw tell how to sort: 
 //! from begining to end(false) or vice versa(true)
-char** Sort(char** text,int size, bool backw) {
-	
-	char** result = new char*[size+1];
+char** Sort_new(char** text,int size, int max_strsize, bool backw) 
+{
+	char** result = new char*[size + 1];
 	for (int i = 0; i < size + 1; i++)
 		result[i] = NULL;
-	//result[size] = NULL;
-	char** begining = result; // to save the begining of the result
-	
-	//trakw("track word") is the massive to sort the text
+	char** resultbeg = result; 
+
+	//trakw("track word") is the array needed to sort the text
 	int* trackw = new int[size];
 	init(trackw, size, -1);
-	
-	//! initialization of track_l
-	int* track_l = new int[alphabetsz];
-	init(track_l, alphabetsz, -1);
-	
-	//! to prepare  the track_w for sorting
-	//! Getchar is to get the letter from the string
-	for (int i = 0; i < size; i++) {
-		for (int j = i - 1; j >= 0; j--)
-			if (Getchar(text[j],0,backw) == Getchar(text[i],0,backw)) {
-				trackw[i] = j;
-				break;
-			}
-		track_l[uc(Getchar(text[i],0,backw))] = i;
+
+	//trackl("track letter") is the array needed to sort the text
+	int** trackl = new int*[max_strsize];
+	for (int i = 0; i < max_strsize; i++) {
+		trackl[i] = new int[ALPHABETSZ];
+		init(trackl[i], ALPHABETSZ, -1);
 	}
 	
-	for (int i = 0; i < alphabetsz; i++)
-		if (track_l[i] != -1)
-			radixSort(text, trackw, track_l[i], 1, backw, result);
+	// pointc[i] contains the last letter of the
+	// string we haven't read yet.
+	// .first from begining to end
+	// .second from end to begining
+	typedef std::pair<char*, char*> PointerC;
+	PointerC* pointc = new PointerC[size];
+	Init_pointc(pointc, text);
+	
+	
+	//! to prepare  the trackw for sorting
+	//! Getchar is to get the letter from the string
+	for (int i = 0; i < size; i++) {
+		int c = Getchar(i, backw, pointc);
+		if (c == -1) continue;
+		trackw[i] = trackl[0][c];
+		trackl[0][c] = i;
+	}
+	
+	Arguments arg;
+	arg.text = text;
+	arg.trackw = trackw;
+	arg.lvl = 1;
+	arg.inv = backw;
+	arg.pointc = pointc;
+	arg.trackl = trackl;
+	
+	for (int i = 0; i < ALPHABETSZ; i++)
+		if (trackl[0][i] != -1) {
+			arg.index = trackl[0][i];
+			radixSort(arg, resultbeg);
+		}
 	
 	delete[] trackw;
-	delete[] track_l;
+	for (int i = 0; i < 10; i++)
+		delete[]trackl[i];
+	delete[]trackl;
+	delete[] pointc;
 	
-	return begining;
+	return result;
 }
-char** Read_Text_new(FILE* in,int &nlines,int& size)
+char** Read_Text_new(FILE* in,long int &nlines,long int& size)
 {
 	char* buf; //buffer for an input
 
@@ -160,18 +249,20 @@ char** Read_Text_new(FILE* in,int &nlines,int& size)
 	rewind(in);
 	assert(size != 0);
 	buf = new char[size+1]; // +1 for '\0'
-
+	
 	// nessesary! initialization
 	memset(buf, '\0', size+1);
 
 	fread(buf, sizeof(buf[0]), size, in);
-
+	
 	//to get the amount of new lines
 	nlines = 1;
 	for (char* s = strchr(buf, '\n'); 
 		 s != NULL;
 		 s = strchr(s, '\n')) 
 	{
+		if (((s - 1) != NULL) && *(s - 1) == '\r') 
+			*(s - 1) = ' ';// std::cout << "rrer";// NULL && *(s - 1) == '\r'); *(s - 1) = '\0';
 		while (*(++s) == '\n'); // to pass '\n's
 		if (*s != '\0') nlines++;
 	} 
@@ -194,7 +285,7 @@ char** Read_Text_new(FILE* in,int &nlines,int& size)
 	return text;
 }
 
-// to delete the dynamic memory
+//! to delete the dynamic memory
 int DeleteText(char** text,int txtsize)
 {
 	memset(text[0], '\0', txtsize);
@@ -207,6 +298,7 @@ int Write(FILE* f, char** t)
 {
 	for (; (*t) != NULL; t++)
 		fprintf(f, "%s\n", *t);
+	
 	return 0;
 }
 
@@ -219,31 +311,28 @@ int main()
 
 	// txtsize - the size of the text
 	// nlines - the amount of new lines
-	int txtsize = 0, nlines = 0;
+	long int txtsize = 0, nlines = 0;
 	char** text = Read_Text_new(in,nlines,txtsize);
-	
+
 	// alphabet sorted text
 	char** version1 = NULL;
 	// alphabet sorted text from the end of the line
 	char** version2 = NULL;
 	
-	version1 = Sort(text, nlines, false);
-	version2 = Sort(text, nlines, true); // sort backward
-	
+	version1 = Sort_new(text, nlines, MAXSTRSZ, false);
+	version2 = Sort_new(text, nlines, MAXSTRSZ, true); // sort backward
 	
 	Write(output1, version1);
 	Write(output2, version2);
 
-	
 	fclose(in);
 	fclose(output1);
 	fclose(output2);
 	
-
 	DeleteText(text,txtsize);
 	delete[]version1;
 	delete[]version2;
-	
+
 	system("pause");
 	
 	return 0;
